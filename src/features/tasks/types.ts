@@ -7,7 +7,5 @@ export interface Task {
   completed: boolean;
   createdAt: string;
 }
-export interface TasksState {
-  tasks: Task[];
-  filter: Priority | 'All';
-}
+
+export type FilterValue = Priority | 'All';
