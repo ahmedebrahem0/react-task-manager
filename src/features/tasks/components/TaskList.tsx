@@ -27,8 +27,7 @@ EmptyState.displayName = 'EmptyState';
 
 const TaskList = () => {
   const { handleAddTask, handleEditTask, handleDeleteTask, handleToggleTask, stats } = useTasks();
-    const { currentFilter, filteredTasks, handleSetFilter } = useFilter();
-    
+  const { currentFilter, filteredTasks, handleSetFilter } = useFilter();
 
   return (
     <section
