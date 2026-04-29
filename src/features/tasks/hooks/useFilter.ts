@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { setFilter } from '../store/tasksSlice';
 import { selectFilter, selectFilteredTasks } from '../store/selectors';
@@ -8,13 +9,13 @@ export const useFilter = () => {
   const currentFilter = useAppSelector(selectFilter);
   const filteredTasks = useAppSelector(selectFilteredTasks);
 
-  const handleSetFilter = (filter: Priority | 'All') => {
+  const handleSetFilter = useCallback((filter: Priority | 'All') => {
     dispatch(setFilter(filter));
-  };
+  }, [dispatch]);
 
-  return {
+  return useMemo(() => ({
     currentFilter,
     filteredTasks,
     handleSetFilter,
-  };
+  }), [currentFilter, filteredTasks, handleSetFilter]);
 };

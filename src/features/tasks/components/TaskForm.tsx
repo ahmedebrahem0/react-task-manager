@@ -1,7 +1,6 @@
-import { useState, useId } from 'react';
+import { useCallback, useId, useState } from 'react';
 import { clsx } from 'clsx';
 import type { Task, Priority } from '../types';
-import { useTasks } from '../hooks/useTasks';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import Button from '../../../components/ui/Button';
@@ -9,6 +8,7 @@ import Button from '../../../components/ui/Button';
 interface TaskFormProps {
   mode: 'add' | 'edit';
   task?: Task;
+  onAdd?: (title: string, priority: Priority) => void;
   onClose?: () => void;
   onEdit?: (id: string, title: string, priority: Priority) => void;
 }
@@ -19,40 +19,51 @@ const PRIORITY_OPTIONS = [
   { value: 'Low', label: '🟢 Low' },
 ];
 
-const TaskForm = ({ mode, task, onClose, onEdit }: TaskFormProps) => {
+const TaskForm = ({ mode, task, onAdd, onClose, onEdit }: TaskFormProps) => {
   const formId = useId();
-  const { handleAddTask } = useTasks();
 
   const [title, setTitle] = useState(task?.title ?? '');
   const [priority, setPriority] = useState<Priority>(task?.priority ?? 'Medium');
   const [error, setError] = useState('');
 
-  const validate = (): boolean => {
-    if (!title.trim()) {
+  const validate = useCallback((trimmedTitle: string): boolean => {
+    if (!trimmedTitle) {
       setError('Task title is required');
       return false;
     }
-    if (title.trim().length < 3) {
+    if (trimmedTitle.length < 3) {
       setError('Title must be at least 3 characters');
       return false;
     }
     setError('');
     return true;
-  };
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    const trimmedTitle = title.trim();
+    if (!validate(trimmedTitle)) return;
 
-    if (mode === 'add') {
-      handleAddTask(title.trim(), priority);
+    if (mode === 'add' && onAdd) {
+      onAdd(trimmedTitle, priority);
       setTitle('');
       setPriority('Medium');
     } else if (mode === 'edit' && task && onEdit) {
-      onEdit(task.id, title.trim(), priority);
+      onEdit(task.id, trimmedTitle, priority);
       onClose?.();
     }
-  };
+  }, [mode, onAdd, onClose, onEdit, priority, task, title, validate]);
+
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+    if (error) {
+      setError('');
+    }
+  }, [error]);
+
+  const handlePriorityChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPriority(e.target.value as Priority);
+  }, []);
 
   return (
     <form
@@ -70,10 +81,7 @@ const TaskForm = ({ mode, task, onClose, onEdit }: TaskFormProps) => {
         label="Task Title"
         placeholder="What needs to be done?"
         value={title}
-        onChange={e => {
-          setTitle(e.target.value);
-          if (error) setError('');
-        }}
+        onChange={handleTitleChange}
         error={error}
         fullWidth
         autoFocus={mode === 'add'}
@@ -84,7 +92,7 @@ const TaskForm = ({ mode, task, onClose, onEdit }: TaskFormProps) => {
         label="Priority"
         options={PRIORITY_OPTIONS}
         value={priority}
-        onChange={e => setPriority(e.target.value as Priority)}
+        onChange={handlePriorityChange}
         fullWidth
         aria-required="true"
       />

@@ -20,7 +20,7 @@ const Button = ({
     <button
       disabled={disabled || isLoading}
       className={clsx(
-        'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200',
+        'inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-200',
         {
           // Variants
           'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800': variant === 'primary',

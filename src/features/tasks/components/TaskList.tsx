@@ -1,24 +1,44 @@
-import { memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ClipboardList } from 'lucide-react';
+import { memo, useMemo } from 'react';
 import { useTasks } from '../hooks/useTasks';
 import { useFilter } from '../hooks/useFilter';
 import TaskCard from './TaskCard';
 import TaskForm from './TaskForm';
 import { FILTER_OPTIONS } from '../constants';
 
+const TASK_STATS = [
+  { key: 'total', label: 'Total' },
+  { key: 'completed', label: 'Completed' },
+  { key: 'active', label: 'Active' },
+] as const;
+
+const EmptyStateIcon = () => (
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 24 24"
+    className="h-12 w-12"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.75"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M9 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+    <path d="M9 3h6v4H9z" />
+    <path d="M9 12h6" />
+    <path d="M9 16h4" />
+  </svg>
+);
+
 const EmptyState = memo(() => (
-  <motion.div
-    initial={{ opacity: 0, y: 16 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="flex flex-col items-center justify-center gap-3 py-16 text-slate-400"
+  <div
+    className="flex flex-col items-center justify-center gap-3 py-16 text-slate-600"
     role="status"
     aria-live="polite"
     aria-label="No tasks found"
   >
-    <ClipboardList size={48} aria-hidden="true" />
+    <EmptyStateIcon />
     <p className="text-sm font-medium">No tasks yet. Add one above!</p>
-  </motion.div>
+  </div>
 ));
 
 EmptyState.displayName = 'EmptyState';
@@ -28,6 +48,12 @@ EmptyState.displayName = 'EmptyState';
 const TaskList = () => {
   const { handleAddTask, handleEditTask, handleDeleteTask, handleToggleTask, stats } = useTasks();
   const { currentFilter, filteredTasks, handleSetFilter } = useFilter();
+  const statsCards = useMemo(() => (
+    TASK_STATS.map(({ key, label }) => ({
+      label,
+      value: stats[key],
+    }))
+  ), [stats]);
 
   return (
     <section
@@ -41,17 +67,13 @@ const TaskList = () => {
         aria-label={`${stats.total} tasks, ${stats.completed} completed, ${stats.active} active`}
         className="grid grid-cols-3 gap-3"
       >
-        {[
-          { label: 'Total', value: stats.total },
-          { label: 'Completed', value: stats.completed },
-          { label: 'Active', value: stats.active },
-        ].map(stat => (
+        {statsCards.map(stat => (
           <div
             key={stat.label}
-            className="flex flex-col items-center p-3 rounded-2xl bg-white border border-slate-100 shadow-sm"
+            className="flex flex-col items-center p-3 rounded-2xl bg-white border border-slate-200 shadow-sm"
           >
             <span className="text-2xl font-bold text-slate-800">{stat.value}</span>
-            <span className="text-xs text-slate-400 font-medium">{stat.label}</span>
+            <span className="text-xs text-slate-600 font-medium">{stat.label}</span>
           </div>
         ))}
       </div>
@@ -68,11 +90,12 @@ const TaskList = () => {
           {FILTER_OPTIONS.map(option => (
             <li key={option.value}>
               <button
+                type="button"
                 onClick={() => handleSetFilter(option.value)}
                 aria-pressed={currentFilter === option.value}
                 aria-label={`Filter by ${option.label}`}
                 className={`
-                  px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200
+                  px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-200
                   ${currentFilter === option.value
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300'
@@ -87,28 +110,27 @@ const TaskList = () => {
       </nav>
 
       {/* Tasks */}
-      <div
-        role="feed"
-        aria-label="Tasks list"
-        aria-busy="false"
-        className="flex flex-col gap-3"
-      >
-        <AnimatePresence mode="popLayout">
-          {filteredTasks.length === 0 ? (
-            <EmptyState key="empty" />
-          ) : (
-            filteredTasks.map(task => (
+      {filteredTasks.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <ul
+          role="list"
+          aria-label="Tasks list"
+          aria-busy="false"
+          className="flex flex-col gap-3"
+        >
+          {filteredTasks.map(task => (
+            <li key={task.id}>
               <TaskCard
-                key={task.id}
                 task={task}
                 onDelete={handleDeleteTask}
                 onToggle={handleToggleTask}
                 onEdit={handleEditTask}
               />
-            ))
-          )}
-        </AnimatePresence>
-      </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 };

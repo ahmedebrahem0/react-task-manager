@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { addTask, editTask, deleteTask, toggleTask } from '../store/tasksSlice';
 import { selectAllTasks, selectTaskStats } from '../store/selectors';
@@ -8,28 +9,28 @@ export const useTasks = () => {
   const tasks = useAppSelector(selectAllTasks);
   const stats = useAppSelector(selectTaskStats);
 
-  const handleAddTask = (title: string, priority: Priority) => {
+  const handleAddTask = useCallback((title: string, priority: Priority) => {
     dispatch(addTask({ title, priority }));
-  };
+  }, [dispatch]);
 
-  const handleEditTask = (id: string, title: string, priority: Priority) => {
+  const handleEditTask = useCallback((id: string, title: string, priority: Priority) => {
     dispatch(editTask({ id, title, priority }));
-  };
+  }, [dispatch]);
 
-  const handleDeleteTask = (id: string) => {
+  const handleDeleteTask = useCallback((id: string) => {
     dispatch(deleteTask(id));
-  };
+  }, [dispatch]);
 
-  const handleToggleTask = (id: string) => {
+  const handleToggleTask = useCallback((id: string) => {
     dispatch(toggleTask(id));
-  };
+  }, [dispatch]);
 
-  return {
+  return useMemo(() => ({
     tasks,
     stats,
     handleAddTask,
     handleEditTask,
     handleDeleteTask,
     handleToggleTask,
-  };
+  }), [tasks, stats, handleAddTask, handleEditTask, handleDeleteTask, handleToggleTask]);
 };
