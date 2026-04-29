@@ -3,19 +3,22 @@ import { useTasks } from '../hooks/useTasks';
 import { useFilter } from '../hooks/useFilter';
 import TaskCard from './TaskCard';
 import { FILTER_OPTIONS } from '../constants';
+// import { ClipboardList } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 
 const loadTaskForm = () => import('./TaskForm');
-const loadEmptyStateIcon = () =>
-  import('lucide-react').then(module => ({ default: module.ClipboardList }));
 
 const TaskForm = lazy(loadTaskForm);
-const EmptyStateIcon = lazy(loadEmptyStateIcon);
+const EmptyStateIcon = ClipboardList;
+
 
 const TASK_STATS = [
   { key: 'total', label: 'Total' },
   { key: 'completed', label: 'Completed' },
   { key: 'active', label: 'Active' },
 ] as const;
+
+
 
 const EmptyState = memo(() => (
   <div
@@ -24,9 +27,7 @@ const EmptyState = memo(() => (
     aria-live="polite"
     aria-label="No tasks found"
   >
-    <Suspense fallback={<div className="h-12 w-12 rounded-2xl bg-slate-200/70" aria-hidden="true" />}>
-      <EmptyStateIcon aria-hidden="true" className="h-12 w-12" strokeWidth={1.75} />
-    </Suspense>
+    <EmptyStateIcon aria-hidden="true" className="h-12 w-12" strokeWidth={1.75} />
     <p className="text-sm font-medium">No tasks yet. Add one above!</p>
   </div>
 ));
@@ -43,12 +44,10 @@ const TaskFormFallback = () => (
 const TaskList = () => {
   const { handleAddTask, handleEditTask, handleDeleteTask, handleToggleTask, stats } = useTasks();
   const { currentFilter, filteredTasks, handleSetFilter } = useFilter();
-  const statsCards = useMemo(() => (
-    TASK_STATS.map(({ key, label }) => ({
-      label,
-      value: stats[key],
-    }))
-  ), [stats]);
+const statsCards = TASK_STATS.map(({ key, label }) => ({
+  label,
+  value: stats[key],
+}));
 
   useEffect(() => {
     const preloadTaskForm = () => {
@@ -63,20 +62,12 @@ const TaskList = () => {
       };
     }
 
-    const timeoutId = window.setTimeout(preloadTaskForm, 300);
+const timeoutId: number = setTimeout(preloadTaskForm, 300);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
   }, []);
-
-  useEffect(() => {
-    if (filteredTasks.length > 0) {
-      return;
-    }
-
-    void loadEmptyStateIcon();
-  }, [filteredTasks.length]);
 
   return (
     <section

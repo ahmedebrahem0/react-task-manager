@@ -9,3 +9,8 @@ export interface Task {
 }
 
 export type FilterValue = Priority | 'All';
+
+export interface TasksState {
+  tasks: Task[];
+  filter: FilterValue;
+}

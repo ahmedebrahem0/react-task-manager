@@ -170,8 +170,8 @@ const TaskCard = ({ task, onDelete, onToggle, onEdit }: TaskCardProps) => {
             </Button>
           </div>
         </article>
-    ))
-}
-      
+    )
+  );
+};
 
 export default memo(TaskCard);
