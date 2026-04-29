@@ -1,33 +1,21 @@
-import { memo, useMemo } from 'react';
+import { Suspense, lazy, memo, useEffect, useMemo } from 'react';
 import { useTasks } from '../hooks/useTasks';
 import { useFilter } from '../hooks/useFilter';
 import TaskCard from './TaskCard';
-import TaskForm from './TaskForm';
 import { FILTER_OPTIONS } from '../constants';
+
+const loadTaskForm = () => import('./TaskForm');
+const loadEmptyStateIcon = () =>
+  import('lucide-react').then(module => ({ default: module.ClipboardList }));
+
+const TaskForm = lazy(loadTaskForm);
+const EmptyStateIcon = lazy(loadEmptyStateIcon);
 
 const TASK_STATS = [
   { key: 'total', label: 'Total' },
   { key: 'completed', label: 'Completed' },
   { key: 'active', label: 'Active' },
 ] as const;
-
-const EmptyStateIcon = () => (
-  <svg
-    aria-hidden="true"
-    viewBox="0 0 24 24"
-    className="h-12 w-12"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.75"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M9 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
-    <path d="M9 3h6v4H9z" />
-    <path d="M9 12h6" />
-    <path d="M9 16h4" />
-  </svg>
-);
 
 const EmptyState = memo(() => (
   <div
@@ -36,14 +24,21 @@ const EmptyState = memo(() => (
     aria-live="polite"
     aria-label="No tasks found"
   >
-    <EmptyStateIcon />
+    <Suspense fallback={<div className="h-12 w-12 rounded-2xl bg-slate-200/70" aria-hidden="true" />}>
+      <EmptyStateIcon aria-hidden="true" className="h-12 w-12" strokeWidth={1.75} />
+    </Suspense>
     <p className="text-sm font-medium">No tasks yet. Add one above!</p>
   </div>
 ));
 
 EmptyState.displayName = 'EmptyState';
 
-
+const TaskFormFallback = () => (
+  <div
+    className="h-[198px] rounded-2xl border border-slate-200 bg-white shadow-sm"
+    aria-hidden="true"
+  />
+);
 
 const TaskList = () => {
   const { handleAddTask, handleEditTask, handleDeleteTask, handleToggleTask, stats } = useTasks();
@@ -54,6 +49,34 @@ const TaskList = () => {
       value: stats[key],
     }))
   ), [stats]);
+
+  useEffect(() => {
+    const preloadTaskForm = () => {
+      void loadTaskForm();
+    };
+
+    if ('requestIdleCallback' in window) {
+      const idleId = window.requestIdleCallback(preloadTaskForm);
+
+      return () => {
+        window.cancelIdleCallback(idleId);
+      };
+    }
+
+    const timeoutId = window.setTimeout(preloadTaskForm, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (filteredTasks.length > 0) {
+      return;
+    }
+
+    void loadEmptyStateIcon();
+  }, [filteredTasks.length]);
 
   return (
     <section
@@ -79,7 +102,9 @@ const TaskList = () => {
       </div>
 
       {/* Add Task Form */}
-      <TaskForm mode="add" onAdd={handleAddTask} />
+      <Suspense fallback={<TaskFormFallback />}>
+        <TaskForm mode="add" onAdd={handleAddTask} />
+      </Suspense>
 
       {/* Filter */}
       <nav aria-label="Filter tasks by priority">

@@ -10,17 +10,17 @@ const priorityConfig: Record<Priority, { label: string; className: string; ariaL
   High: {
     label: 'High',
     ariaLabel: 'Priority: High',
-    className: 'bg-red-100 text-red-700 ring-1 ring-red-200',
+    className: 'bg-red-100 text-red-800 ring-1 ring-red-200',
   },
   Medium: {
     label: 'Medium',
     ariaLabel: 'Priority: Medium',
-    className: 'bg-yellow-100 text-yellow-700 ring-1 ring-yellow-200',
+    className: 'bg-amber-100 text-amber-900 ring-1 ring-amber-200',
   },
   Low: {
     label: 'Low',
     ariaLabel: 'Priority: Low',
-    className: 'bg-green-100 text-green-700 ring-1 ring-green-200',
+    className: 'bg-green-100 text-green-800 ring-1 ring-green-200',
   },
 };
 

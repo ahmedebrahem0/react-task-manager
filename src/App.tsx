@@ -1,6 +1,8 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 
-const TaskList = lazy(() => import('./features/tasks/components/TaskList'));
+const loadTaskList = () => import('./features/tasks/components/TaskList');
+
+const TaskList = lazy(loadTaskList);
 
 const TaskListFallback = () => (
   <div
@@ -37,6 +39,26 @@ const TaskListFallback = () => (
 );
 
 const App = () => {
+  useEffect(() => {
+    const preloadTaskList = () => {
+      void loadTaskList();
+    };
+
+    if ('requestIdleCallback' in window) {
+      const idleId = window.requestIdleCallback(preloadTaskList);
+
+      return () => {
+        window.cancelIdleCallback(idleId);
+      };
+    }
+
+    const timeoutId = window.setTimeout(preloadTaskList, 250);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50" role="main">
       <header className="w-full bg-white border-b border-slate-200 shadow-sm">

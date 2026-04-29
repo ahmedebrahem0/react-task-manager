@@ -7,9 +7,31 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'redux-vendor': ['@reduxjs/toolkit', 'react-redux', 'reselect'],
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            return undefined;
+          }
+
+          if (id.includes('react') || id.includes('scheduler')) {
+            return 'react-vendor';
+          }
+
+          if (
+            id.includes('@reduxjs/toolkit')
+            || id.includes('react-redux')
+            || id.includes('reselect')
+          ) {
+            return 'redux-vendor';
+          }
+
+          if (
+            id.includes('lucide-react')
+            || id.includes('framer-motion')
+          ) {
+            return 'ui-vendor';
+          }
+
+          return 'vendor';
         },
       },
     },

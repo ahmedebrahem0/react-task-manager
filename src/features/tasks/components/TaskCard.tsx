@@ -1,9 +1,10 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { Suspense, lazy, memo, useCallback, useMemo, useState } from 'react';
 import { clsx } from 'clsx';
 import type { Task, Priority } from '../types';
 import Badge from '../../../components/ui/Badge';
 import Button from '../../../components/ui/Button';
-import TaskForm from './TaskForm';
+
+const TaskForm = lazy(() => import('./TaskForm'));
 
 interface TaskCardProps {
   task: Task;
@@ -62,6 +63,13 @@ const DeleteIcon = () => (
   </svg>
 );
 
+const EditFormFallback = () => (
+  <div
+    className="h-[198px] rounded-2xl border border-slate-200 bg-white shadow-sm"
+    aria-hidden="true"
+  />
+);
+
 const TaskCard = ({ task, onDelete, onToggle, onEdit }: TaskCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const formattedDate = useMemo(
@@ -83,6 +91,7 @@ const TaskCard = ({ task, onDelete, onToggle, onEdit }: TaskCardProps) => {
 
   return (
     isEditing ? (
+      <Suspense fallback={<EditFormFallback />}>
         <div className="transition-opacity duration-200">
           <TaskForm
             mode="edit"
@@ -91,13 +100,16 @@ const TaskCard = ({ task, onDelete, onToggle, onEdit }: TaskCardProps) => {
             onClose={handleStopEditing}
           />
         </div>
+      </Suspense>
       ) : (
         <article
           aria-label={`Task: ${task.title}`}
           className={clsx(
             'flex items-center gap-4 p-4 rounded-2xl border shadow-sm transition-[opacity,box-shadow] duration-200',
             'bg-white hover:shadow-md',
-            { 'opacity-60': task.completed }
+            {
+              'border-slate-200 bg-slate-50/70': task.completed,
+            }
           )}
         >
           {/* Checkbox */}
@@ -122,11 +134,13 @@ const TaskCard = ({ task, onDelete, onToggle, onEdit }: TaskCardProps) => {
           <div className="flex-1 min-w-0">
             <p className={clsx(
               'text-sm font-medium text-slate-800 truncate',
-              { 'line-through text-slate-500': task.completed }
+              {
+                'line-through text-slate-700': task.completed,
+              }
             )}>
               {task.title}
             </p>
-            <p className="text-xs text-slate-600 mt-0.5">
+            <p className="mt-0.5 text-xs text-slate-700">
               {formattedDate}
             </p>
           </div>
